@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: #0a0a0b;
+  --color-surface: #111114;
+  --color-surface2: #18181d;
+  --color-border: rgba(255,255,255,0.08);
+  --color-accent: #e8843a;
+  --color-accent2: #c0392b;
+  --color-text: #f0ede8;
+  --color-muted: #8a8590;
+  --font-sans: 'Manrope', sans-serif;
+  --font-display: 'DM Serif Display', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0a0a0b;
+  color: #f0ede8;
+  font-family: 'Manrope', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar but keep scroll */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(232,132,58,0.5); }
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Carousel scroll snap */
+.carousel-scroll {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.carousel-scroll > * {
+  scroll-snap-align: start;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Poster hover zoom */
+.poster-wrap {
+  overflow: hidden;
+}
+.poster-wrap img {
+  transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.poster-wrap:hover img {
+  transform: scale(1.06);
+}
+
+/* Native dropdown lists render with the OS theme; keep them dark so light option text stays readable */
+select {
+  color-scheme: dark;
+}
+select option {
+  background-color: #18181d;
+  color: #f0ede8;
+}
+
+/* Responsive poster grid: two columns at phone widths, 160px+ cells from tablet up */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+}

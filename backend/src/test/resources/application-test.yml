@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:movieai;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+
+movieai:
+  tmdb:
+    access-token: test-tmdb-token
+    connect-timeout: 1s
+    read-timeout: 2s
+  security:
+    jwt:
+      secret: test-access-secret-0123456789-abcdefghijklmnop
+      refresh-secret: test-refresh-secret-0123456789-abcdefghijklmn
+    refresh-cookie:
+      secure: false
+  rate-limit:
+    public-per-minute: 100000
+    search-per-minute: 100000
+    recommendations-per-minute: 100000
+    auth-per-minute: 100000
+    watchlist-per-minute: 100000
+
+logging:
+  level:
+    com.movieai: INFO

@@ -1,0 +1,56 @@
+# Local infrastructure for MovieAI.
+#   docker compose up -d                        -> PostgreSQL only (run the backend with ./mvnw spring-boot:run)
+#   docker compose --profile redis up -d        -> also start Redis (reserved for a future distributed cache)
+#   docker compose --profile app up -d --build  -> also build and run the backend in a container
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-movieai}
+      POSTGRES_USER: ${POSTGRES_USER:-movieai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-movieai}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["redis"]
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    profiles: ["app"]
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-movieai}
+      DATABASE_USERNAME: ${POSTGRES_USER:-movieai}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-movieai}
+      REFRESH_COOKIE_SECURE: ${REFRESH_COOKIE_SECURE:-false}
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  postgres-data:

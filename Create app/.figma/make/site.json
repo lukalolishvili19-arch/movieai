@@ -1,0 +1,10 @@
+{
+  "description": "Organize and manage tasks efficiently with an intuitive interface designed to boost productivity and streamline your daily workflow.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
