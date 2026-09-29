@@ -55,10 +55,15 @@ Flyway creates the schema on first start (`backend/src/main/resources/db/migrati
 | `JWT_SECRET` / `JWT_REFRESH_SECRET` | Two different secrets, 32+ bytes each |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins |
 | `REFRESH_COOKIE_SECURE` | `true` in production (HTTPS) |
+| `REFRESH_COOKIE_SAME_SITE` | `Lax` (same site) or `None` (frontend and API on different sites) |
 | `FORWARD_HEADERS_STRATEGY` | `native` behind a trusted reverse proxy, so rate limiting sees real client IPs |
+| `JWT_EXPIRATION` / `JWT_REFRESH_EXPIRATION` | Token lifetimes, default `15m` / `30d` |
+| `SPRING_PROFILES_ACTIVE` | `prod` in production (see below) |
+| `API_DOCS_ENABLED` | Swagger UI / OpenAPI; on locally, off under `prod` |
 
-If the JWT secrets are missing the backend starts with random ephemeral keys and logs a warning (sessions
-won't survive a restart). Secrets shorter than 32 bytes fail startup.
+Locally, if the JWT secrets are missing the backend starts with random ephemeral keys and logs a warning
+(sessions won't survive a restart). Under the `prod` profile missing secrets fail startup. Secrets shorter
+than 32 bytes always fail startup.
 
 ### Frontend (`Create app/.env.local`)
 
@@ -67,6 +72,46 @@ won't survive a restart). Secrets shorter than 32 bytes fail startup.
 | `VITE_API_URL` | Backend origin in production (e.g. `https://api.example.com`). Leave empty for same-origin. |
 
 Never put secrets in `VITE_` variables — they are bundled into the browser build.
+
+## Production deployment (Render + Vercel)
+
+```
+Browser ──► Vercel (Create app/, static SPA) ──► Render web service (backend/, Docker, Java 21) ──► Render PostgreSQL
+                                                   └──► TMDB (token stays on Render)
+```
+
+### 1. Backend + database on Render
+
+1. Render Dashboard → **New → Blueprint** → select this repository. Render reads `render.yaml` and creates
+   the `movieai-backend` web service (Docker) and the `movieai-db` PostgreSQL database in Frankfurt.
+2. When prompted, fill in:
+   - `TMDB_ACCESS_TOKEN` — TMDB v4 read access token
+   - `CORS_ALLOWED_ORIGINS` — your Vercel URL, e.g. `https://movieai.vercel.app` (no trailing slash).
+     If you don't know it yet, enter a placeholder and update it after step 2.
+3. `DATABASE_URL`, `JWT_SECRET` and `JWT_REFRESH_SECRET` are wired/generated automatically. Flyway creates the
+   schema on first start. Health check: `https://<service>.onrender.com/actuator/health` → `{"status":"UP"}`.
+
+`SPRING_PROFILES_ACTIVE=prod` refuses to start if a required variable is missing, forces `Secure` cookies,
+sets `SameSite=None` for the refresh cookie (frontend and API are on different sites), trusts Render's
+`X-Forwarded-*` headers and disables Swagger UI.
+
+### 2. Frontend on Vercel
+
+1. Vercel → **Add New → Project** → import this repository.
+2. **Root Directory:** `Create app` (framework preset: Vite; build `pnpm run build`, output `dist`).
+3. Environment variable: `VITE_API_URL=https://<service>.onrender.com` (Production and Preview).
+4. Deploy, then put the resulting URL into Render's `CORS_ALLOWED_ORIGINS`. Preview deployments can be allowed
+   with a pattern, e.g. `https://movieai.vercel.app,https://movieai-*-<team>.vercel.app`.
+
+`vercel.json` rewrites unknown paths to `index.html`, so deep links such as `/movie/438631` survive a refresh.
+
+### Custom domains (recommended)
+
+Browsers that block third-party cookies (Safari, some privacy modes) drop the refresh cookie when the
+frontend and API are on different sites, which signs users out on reload. Serving both from one domain fixes
+this: e.g. `movieai.example.com` on Vercel and `api.movieai.example.com` on Render (CNAME records as shown
+in each dashboard), then set `VITE_API_URL=https://api.movieai.example.com`,
+`CORS_ALLOWED_ORIGINS=https://movieai.example.com` and `REFRESH_COOKIE_SAME_SITE=Lax`.
 
 ## API
 

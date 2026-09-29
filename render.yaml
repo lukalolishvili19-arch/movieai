@@ -1,0 +1,47 @@
+# Render Blueprint: Spring Boot API (Docker, Java 21) + managed PostgreSQL.
+# Dashboard -> New -> Blueprint -> select this repository. Variables marked `sync: false` are prompted for
+# on first deploy; real values are never stored in this file.
+services:
+  - type: web
+    name: movieai-backend
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    region: frankfurt
+    plan: free
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - backend/**
+        - render.yaml
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        fromDatabase:
+          name: movieai-db
+          property: connectionString
+      - key: TMDB_ACCESS_TOKEN
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      # The Vercel frontend origin(s), comma-separated, no trailing slash, e.g. https://movieai.vercel.app
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: REFRESH_COOKIE_SAME_SITE
+        value: None
+      - key: FORWARD_HEADERS_STRATEGY
+        value: native
+
+databases:
+  - name: movieai-db
+    databaseName: movieai
+    user: movieai
+    region: frankfurt
+    plan: free
+    postgresMajorVersion: "16"
+    # Only the backend (same region, private network) may connect.
+    ipAllowList: []

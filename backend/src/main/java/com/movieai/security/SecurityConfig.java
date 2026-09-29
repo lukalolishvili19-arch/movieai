@@ -87,8 +87,13 @@ public class SecurityConfig {
     private CorsConfigurationSource corsConfigurationSource(MovieAiProperties properties) {
         CorsConfiguration config = new CorsConfiguration();
         List<String> origins = properties.security().cors().allowedOrigins() == null ? List.of()
-                : properties.security().cors().allowedOrigins().stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
-        config.setAllowedOrigins(origins);
+                : properties.security().cors().allowedOrigins().stream()
+                .map(s -> s.trim().replaceAll("/+$", "")).filter(s -> !s.isEmpty()).toList();
+        // Credentialed CORS must never echo arbitrary origins; patterns are only for e.g. Vercel preview URLs.
+        if (origins.contains("*")) {
+            throw new IllegalStateException("CORS_ALLOWED_ORIGINS must list explicit origins, not '*'");
+        }
+        config.setAllowedOriginPatterns(origins);
         config.setAllowedMethods(List.of("GET", "POST", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-MovieAI-Client"));
         config.setExposedHeaders(List.of("Retry-After", "X-RateLimit-Limit", "X-RateLimit-Remaining"));

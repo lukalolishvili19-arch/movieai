@@ -12,4 +12,4 @@ RUN useradd --system --uid 10001 movieai
 COPY --from=build /app/target/*.jar app.jar
 USER movieai
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:+ExitOnOutOfMemoryError", "-jar", "/app/app.jar"]
