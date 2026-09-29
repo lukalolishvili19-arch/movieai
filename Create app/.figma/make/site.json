@@ -1,5 +1,6 @@
 {
-  "description": "Organize and manage tasks efficiently with an intuitive interface designed to boost productivity and streamline your daily workflow.",
+  "title": "MovieAI",
+  "description": "Discover trending movies, TV shows and actors, find where to watch them, and keep a personal watchlist.",
   "robots": {
     "index": false
   },
