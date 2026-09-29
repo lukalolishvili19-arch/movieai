@@ -33,6 +33,7 @@ spring:
 
 server:
   port: ${PORT:8080}
+  address: ${SERVER_ADDRESS:0.0.0.0}
   shutdown: graceful
   forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
   error:
@@ -55,8 +56,10 @@ management:
 
 springdoc:
   api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
     path: /v3/api-docs
   swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}
     path: /swagger-ui.html
     operations-sorter: alpha
     tags-sorter: alpha
@@ -77,8 +80,8 @@ movieai:
       secret: ${JWT_SECRET:}
       refresh-secret: ${JWT_REFRESH_SECRET:}
       issuer: movieai
-      access-token-ttl: 15m
-      refresh-token-ttl: 30d
+      access-token-ttl: ${JWT_EXPIRATION:15m}
+      refresh-token-ttl: ${JWT_REFRESH_EXPIRATION:30d}
     refresh-cookie:
       name: movieai_refresh
       path: /api/v1/auth
